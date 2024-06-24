@@ -9,5 +9,6 @@ router.post("/login", usercontroller.loginUser)
 router.get("/dashboard", usercontroller.getDashboard)
 router.patch('/update/:id', upload.single('photo'),usercontroller.updateUser);
 router.get("/logout", usercontroller.logoutUser)
+router.post('/verify-otp', usercontroller.verifyOtp);
 
 module.exports = router;

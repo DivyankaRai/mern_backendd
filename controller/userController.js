@@ -1,12 +1,11 @@
-const User = require('../models/userShema')
+const User = require('../models/userShema');
 var bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken")
-
-// register 
-exports.registerUser = async(req,res)=>{
-
+const jwt = require("jsonwebtoken");
+const client = require('../twilio')
+// Register User
+exports.registerUser = async (req, res) => {
     try {
-        const { name, email, phone, password, confirm_password} = req.body;
+        const { name, email, phone, password, confirm_password } = req.body;
         const file = req.file.filename;
 
         if (password !== confirm_password) {
@@ -18,20 +17,19 @@ exports.registerUser = async(req,res)=>{
             return res.status(400).json({ error: "Email or phone number already exists" });
         }
 
-        const newUser = new User({ name, email, phone, password, confirm_password, photo:file });
+        const newUser = new User({ name, email, phone, password, confirm_password, photo: file });
 
         await newUser.save();
 
-        res.status(201).json({ user: newUser});
+        res.status(201).json({ user: newUser });
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: error });
     }
 }
 
-//  Login User
-exports.loginUser = async(req,res)=>{
-
+// Login User and send OTP
+exports.loginUser = async (req, res) => {
     const { phone, password } = req.body;
 
     if (!phone || !password) {
@@ -50,21 +48,60 @@ exports.loginUser = async(req,res)=>{
             return res.status(422).json({ error: "Invalid credentials" });
         }
 
-        const token = jwt.sign({ userId: user._id }, "SECRET123", {
-            expiresIn: '1h' 
-        });
+        // Send OTP 
+        const verification = await client.verify.v2.services("VAe1553476ef6307b402fee15c8a7f62b4")
+            .verifications
+            .create({ to: `+91${phone}`, channel: 'sms' });
 
-        res.cookie("token", token, {
-            httpOnly: true,
-            expires: new Date(Date.now() + 3600000), 
-        });
-
-        res.status(201).json({ status: 201, result: { user, token } });
+        res.status(200).json({ message: "OTP sent to your phone", sid: verification.sid });
     } catch (error) {
         console.error(error);
-        res.status(500).json({ error: error });
+        res.status(500).json({ error: error.message });
     }
-}
+};
+
+// Verify OTP and log in
+exports.verifyOtp = async (req, res) => {
+    const { phone, otp } = req.body;
+
+    if (!phone || !otp) {
+        return res.status(422).json({ error: "Please provide both phone and OTP" });
+    }
+
+    try {
+        const user = await User.findOne({ phone });
+
+        if (!user) {
+            return res.status(404).json({ error: "User not found" });
+        }
+
+        // Verify OTP
+        const verificationCheck = await client.verify.v2.services("VAe1553476ef6307b402fee15c8a7f62b4")
+            .verificationChecks
+            .create({ to: `+91${phone}`, code: otp });
+
+        if (verificationCheck.status !== 'approved') {
+            return res.status(400).json({ error: "Invalid or expired OTP" });
+        }
+
+        // OTP is valid, generate JWT token
+        const token = jwt.sign({ userId: user._id }, 'SECRET123', {
+            expiresIn: '1h'
+        });
+
+        res.cookie('token', token, {
+            httpOnly: true,
+            expires: new Date(Date.now() + 3600000),
+        });
+
+        res.status(200).json({ status: 200, result: { user, token } });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: error.message });
+    }
+};
+
+
 
 exports.getDashboard = async (req, res) => {
     try {

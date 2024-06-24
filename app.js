@@ -7,7 +7,7 @@ require('./db/db')
 
 const app = express()
 app.use(cors({
-    origin: 'https://667913ed120fca60450c8b60--eloquent-praline-44b1e3.netlify.app', // Replace with your frontend's URL
+    origin: 'https://667946be3bf94c693d4ac52e--animated-palmier-872a68.netlify.app', 
     credentials: true 
 }));
 app.use(express.json())
