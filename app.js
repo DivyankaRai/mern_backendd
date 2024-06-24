@@ -7,7 +7,7 @@ require('./db/db')
 
 const app = express()
 app.use(cors({
-    origin: 'https://client-ki2e03k70-divyankarais-projects.vercel.app', // Replace with your frontend's URL
+    origin: 'https://667913ed120fca60450c8b60--eloquent-praline-44b1e3.netlify.app', // Replace with your frontend's URL
     credentials: true // Required if your frontend and backend use cookies
 }));
 app.use(express.json())
