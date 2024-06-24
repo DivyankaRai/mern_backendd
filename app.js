@@ -7,8 +7,8 @@ require('./db/db')
 
 const app = express()
 app.use(cors({
-    origin: 'http://localhost:3000', // Replace with your frontend's URL
-    credentials: true // Required if your frontend and backend use cookies
+    origin: 'http://localhost:3000',
+    credentials: true 
 }));
 app.use(express.json())
 app.use(cookieParser())
