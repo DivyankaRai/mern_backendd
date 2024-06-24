@@ -1,8 +1,14 @@
 const User = require('../models/userShema');
 var bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const client = require('../twilio')
-// Register User
+const twilio = require('twilio');
+
+const accountSid = 'ACc52e8add86d970e48030a27e6b785a0c';
+const authToken = 'f9f73f36e97fe126125363d813731803';
+
+const client = new twilio(accountSid, authToken)
+
+
 exports.registerUser = async (req, res) => {
     try {
         const { name, email, phone, password, confirm_password } = req.body;
